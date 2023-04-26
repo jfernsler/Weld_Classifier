@@ -4,18 +4,22 @@ from pathlib import Path
 import torch
 import os, json
 
+# assume these won't move around
 SCRIPT_PATH = Path(__file__).absolute()
 SCRIPT_DIR = os.path.dirname(SCRIPT_PATH)
-
-BASE_PATH = os.path.join(SCRIPT_DIR, '..', 'data', 'ss304')
+DATA_PATH = os.path.join(SCRIPT_DIR, '..', 'data', 'ss304')
 
 CLASS_LIST = ['good weld', 'burn through', 'contamination', 'lack of fusion', 'lack of shielding gas', 'high travel speed']
 
 class ss304Dataset(Dataset):
+    """
+    Main dataset class for ss304 weld images.
+    """
     def __init__(self, 
-                 root_dir = BASE_PATH,
+                 root_dir = DATA_PATH,
                  data_type = 'test', 
                  transform=None):
+        
         self.classes = CLASS_LIST
         self.transform = transform
 
@@ -55,7 +59,9 @@ class ss304Dataset(Dataset):
             image = self.transform(image)
 
         return {'image': image,
-                'label': label_tensor
+                'label': label_tensor,
+                'class': self.data[idx]['class'],
+                'path': img_name
                 }
 
     def check_image(self, idx):

@@ -1,5 +1,6 @@
 from pathlib import Path
 import os, random
+from PIL import Image
 
 import torch
 from torchvision import transforms
@@ -20,16 +21,16 @@ SCRIPT_PATH = Path(__file__).absolute()
 SCRIPT_DIR = os.path.dirname(SCRIPT_PATH)
 
 def load_model(model_path):
-    device = get_device()
+    device = get_device(show=False)
     model = ss304_weld_model()
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.to(device)
     model.eval()
     return model
 
-def check_accuracy():
+def check_accuracy(model_name='weld_resnet50_model'):
     data, data_size = get_dataset(type='test', loader=True, batch_size=32)
-    model = load_model(os.path.join(SCRIPT_DIR, '../models/weld_resnet50_model_2.pt'))
+    model = load_model(os.path.join(SCRIPT_DIR, '..', 'models', f'{model_name}.pt'))
 
     for bi, d in enumerate(data):
         print(f'Batch {bi}')
@@ -44,13 +45,9 @@ def check_accuracy():
             break
 
 
-def check_model():
-    # mean and std of imagenet dataset
-    IMG_MEAN = torch.tensor([0.485, 0.456, 0.406])
-    IMG_STD = torch.tensor([0.229, 0.224, 0.225])
-    IMAGE_SIZE = 224
+def check_model(model_name='weld_resnet50_model'):
 
-    dataset = ss304Dataset(data_type='test')
+    dataset = get_dataset(type='test')
 
     rand_idx = random.randint(0, len(dataset))
 
@@ -60,26 +57,10 @@ def check_model():
 
     # img.show()
 
-    # Step 1: Initialize model with the best available weights
-    # device = get_device()
-    # model_path = os.path.join(SCRIPT_DIR, '../models/weld_resnet50_model_2.pt')
-
-    # model = ss304_weld_model()
-    # model.load_state_dict(torch.load(model_path, map_location=device))
-    # model.to(device)
-    # model.eval()
-    model = load_model(os.path.join(SCRIPT_DIR, '../models/weld_resnet50_model_2.pt'))
-
-    # Setup and apply inference preprocessing transforms
-    preprocess = transforms.Compose([
-        transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
-        transforms.ToTensor(),
-        transforms.Normalize(IMG_MEAN, IMG_STD)
-    ])
-    batch = preprocess(img).unsqueeze(0)
+    model = load_model(os.path.join(SCRIPT_DIR, '..', 'models', f'{model_name}.pt'))
 
     # Use the model and print the predicted category
-    prediction = model(batch).squeeze(0).softmax(0)
+    prediction = model(img.unsqueeze(0)).squeeze(0).softmax(0)
     class_id = prediction.argmax().item()
     score = prediction[class_id].item()
     class_pred = dataset.classes[class_id]
@@ -88,38 +69,77 @@ def check_model():
     print(f"Actual: {class_actual} || Prediction: {class_pred}: {100 * score:.1f}%")
 
 
-def make_matrix():
+def check_model_batch(model_name='weld_resnet50_model', batch_size=9):
 
-    y_pred = []
-    y_true = []
+    dataset = get_dataset(type='test')
+    dataset_loader, _ = get_dataset(type='test', loader=True, batch_size=batch_size)
 
-    # mean and std of imagenet dataset
-    IMG_MEAN = torch.tensor([0.485, 0.456, 0.406])
-    IMG_STD = torch.tensor([0.229, 0.224, 0.225])
-    IMAGE_SIZE = 224
-    BATCH_SIZE = 64
+    rand_idx = random.randint(0, len(dataset))
+    img_data = dataset[rand_idx]
+    img = img_data['image']
+    class_actual = dataset.get_class(rand_idx)
+
+    class_list = dataset.classes
+
+    # img.show()
+
+    model = load_model(os.path.join(SCRIPT_DIR, '..', 'models', f'{model_name}.pt'))
+
+    for bi, d in enumerate(dataset_loader):
+        img = d['image']
+        labels = d['label']
+        class_actual = d['class']
+        path = d['path']
+        prediction = model(img).softmax(1)
+        break
+
+    figure = plt.figure(figsize=(8, 8))
+    cols, rows = 3, 3
+    # for i in range(1, cols * rows + 1):
+    #     sample_idx = torch.randint(len(training_data), size=(1,)).item()
+    #     img, label = training_data[sample_idx]
+    #     figure.add_subplot(rows, cols, i)
+    #     plt.title(labels_map[label])
+    #     plt.axis("off")
+    #     plt.imshow(img.squeeze(), cmap="gray")
+    # plt.show()
+
+    print('Actual\t\t\tPrediction\t\tScore')
+    for i in range(len(prediction)):
+        y = prediction[i]
+        x = class_actual[i]
+        y_pred = y.argmax().item()
+        pred_class = class_list[y_pred]
+        s = y[y_pred].item() * 100
+        acc_class = x
+        print(f'{acc_class}\t\t\t{pred_class}\t\t{s:.2f}%')
+
+        img = Image.open(path[i])
+        figure.add_subplot(rows, cols, i+1)
+        plt.title(f'{acc_class} {s:.2f}%\nActual: {pred_class}')
+        plt.axis("off")
+        plt.imshow(img)
+    plt.show()
     
-    # use the collections dataset class we created earlier
-    preprocess = transforms.Compose([
-        transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
-        transforms.ToTensor(),
-        transforms.Normalize(IMG_MEAN, IMG_STD)
-    ])
-    test_dataset = ss304Dataset(data_type='test', transform=preprocess)
+
+def make_matrix(model_name='weld_resnet50_model'):
+    BATCH_SIZE = 64
+    device = get_device(show=True)
 
     # create the pytorch data loader
-    test_dataset_loader = torch.utils.data.DataLoader(test_dataset,
-                                                    shuffle=True,
-                                                    batch_size=BATCH_SIZE,
-                                                    num_workers=0)
+    test_dataset = get_dataset(data_type='test')
+    test_dataset_loader, td_size = get_dataset(data_type='test', loader=True, batch_size=BATCH_SIZE)
 
-    device = get_device()
-    model_path = os.path.join(SCRIPT_DIR, '../models/weld_resnet50_model_5.pt')
+    model_path = os.path.join(SCRIPT_DIR, '..', 'models', f'{model_name}.pt')
+    figure_path = os.path.join(SCRIPT_DIR, '..', 'charts', f'{model_name}_confusion.png')
 
     model = ss304_weld_model()
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.to(device)
     model.eval()
+
+    y_pred = []
+    y_true = []
 
     for bi, d in enumerate(test_dataset_loader):
         # get predictions from model
@@ -148,13 +168,13 @@ def make_matrix():
     plt.title('Confusion Matrix for CNN based Weld Classification')
     hm = sn.heatmap(df_cm, annot=True, linewidths=.5, cmap='plasma', fmt='.2f', linecolor='grey')
     hm.set(xlabel='Predicted', ylabel='Truth')
-    plt.savefig('confusion_matrix_5.png')
+    plt.savefig(figure_path)
 
     return
 
 
 if __name__ == '__main__':
-    #check_model()
+    check_model_batch()
     #check_accuracy()
-    make_matrix()
+    #make_matrix()
     # print('Done.

@@ -10,10 +10,7 @@ from torchmetrics.classification import BinaryAccuracy
 
 import numpy as np
 
-from ss304_dataset import ss304Dataset
-
 from ss304_model import ss304_weld_model
-from ss304_stats import check_model
 from ss304_utils import get_device, get_dataset
 
 # Globals
@@ -181,13 +178,14 @@ def run_train(epochs=1):
     model_path = os.path.join(SCRIPT_DIR, '../models/weld_resnet50_model_5.pt')
     torch.save(model_weld.state_dict(), model_path)
 
+
 def list_model(model):
     model_dict = model.state_dict()
     dict_keys = list(model_dict.keys())
     for key in dict_keys:
         print(f'{key} : {model_dict[key].shape}')
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     run_train(epochs=30)
 
