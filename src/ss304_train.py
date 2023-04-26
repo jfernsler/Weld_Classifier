@@ -12,12 +12,14 @@ import numpy as np
 
 from ss304_model import ss304_weld_model
 from ss304_utils import get_device, get_dataset
+from ss304_stats import make_charts
 
-# Globals
-SCRIPT_PATH = Path(__file__).absolute()
-SCRIPT_DIR = os.path.dirname(SCRIPT_PATH)
-BATCH_CSV_PATH = os.path.join(SCRIPT_DIR, '../csv/weld_train_batch_5.csv')
-EPOCH_CSV_PATH = os.path.join(SCRIPT_DIR, '../csv/weld_train_epoch_5.csv')
+from ss304_globals import *
+
+BASE_NAME = 'weld_resnet50_model'
+VERSION = 'v6'
+CSV_NAME = f'{BASE_NAME}_{VERSION}.csv'
+EPOCH_CSV_PATH = os.path.join(CSV_DIR, CSV_NAME)
 
 def train_model(model, 
                 train_loader, 
@@ -38,18 +40,14 @@ def train_model(model,
     valid_model_loss = []
     valid_model_acc = []
 
-    # fb = open(BATCH_CSV_PATH,'w')
-    # fb.write('epoch, batch, train_loss, valid_loss\n')
-
     fe = open(EPOCH_CSV_PATH,'w')
     fe.write('epoch, train_loss, train_accuracy, valid_loss, valid_accuracy\n')
-    fe.write('0,1,1,0,0\n')
+    fe.write('0,1,0,1,0\n')
     fe.close()
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.fc.parameters())
     metric = BinaryAccuracy().to(device)
-
 
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
@@ -88,11 +86,8 @@ def train_model(model,
             print(f'\tavg loss: {np.mean(running_train_loss)}')
             print(f'\tavg accuracy: {np.mean(running_train_accuracy)}')
 
-            # if bi > 10:
-            #     break
-
-
         model.eval()
+
         # Iterate over valid data.
         for bi, d in enumerate(valid_loader):
             inputs = d['image']
@@ -113,9 +108,6 @@ def train_model(model,
             print(f'\tbatch accuracy: {running_valid_accuracy[-1]}')
             print(f'\tavg loss: {np.mean(running_valid_loss)}')
             print(f'\tavg accuracy: {np.mean(running_valid_accuracy)}')
-
-            # if bi > 10:    
-            #     break
 
         scheduler.step()
         
@@ -140,6 +132,7 @@ def train_model(model,
         print(f'Epoch: {epoch}: Valid Accuracy: {epoch_valid_accuracy}')
         print('*' * 80)
 
+    make_charts(EPOCH_CSV_PATH, VERSION)
     print('*' * 80 )
     print('Training complete')
     print('*' * 80 )
@@ -152,8 +145,8 @@ def run_train(epochs=1):
     print(f'Device : {device}')
     
     # get the datasets
-    train_dataset_loader, train_size = get_dataset(type='train', loader=True, batch_size=64)
-    valid_dataset_loader, valid_size = get_dataset(type='valid', loader=True, batch_size=64)
+    train_dataset_loader, train_size = get_dataset(type='train', loader=True, batch_size=32)
+    valid_dataset_loader, valid_size = get_dataset(type='valid', loader=True, batch_size=32)
 
     # get the model
     model_weld = ss304_weld_model()
@@ -175,8 +168,10 @@ def run_train(epochs=1):
                         num_epochs=epochs)
 
     # define a path and save it out
-    model_path = os.path.join(SCRIPT_DIR, '../models/weld_resnet50_model_5.pt')
+    print(f'Saving model {BASE_NAME}_{VERSION}.pt to {MODEL_DIR}')
+    model_path = os.path.join(MODEL_DIR, f'{BASE_NAME}_{VERSION}.pt')
     torch.save(model_weld.state_dict(), model_path)
+    print('Model saved, Training complete')
 
 
 def list_model(model):

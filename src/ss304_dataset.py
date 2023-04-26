@@ -1,13 +1,12 @@
 from PIL import Image
 from torch.utils.data import Dataset
-from pathlib import Path
 import torch
 import os, json
 
-# assume these won't move around
-SCRIPT_PATH = Path(__file__).absolute()
-SCRIPT_DIR = os.path.dirname(SCRIPT_PATH)
-DATA_PATH = os.path.join(SCRIPT_DIR, '..', 'data', 'ss304')
+from ss304_globals import *
+
+#DATA_PATH = os.path.join(DATA_DIR, 'ss304')
+DATA_PATH = os.path.join(DATA_DIR, 'ss304_reduced')
 
 CLASS_LIST = ['good weld', 'burn through', 'contamination', 'lack of fusion', 'lack of shielding gas', 'high travel speed']
 
@@ -36,7 +35,7 @@ class ss304Dataset(Dataset):
                               'label': data[image],
                               'class': CLASS_LIST[data[image]],}
 
-        #print('Loaded {0} images'.format(len(self.data)))
+        print(f'Loaded {len(self.data)} images from {data_type} dataset.')
 
         self.num_classes = len(CLASS_LIST)
 
@@ -69,6 +68,9 @@ class ss304Dataset(Dataset):
         print(self.data[idx])
         image = Image.open(img_name)
         image.show()
+
+    def get_img_info(self, idx):
+        return self.data[idx]
 
     def get_class_count(self):
         return self.num_classes
