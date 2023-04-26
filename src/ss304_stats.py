@@ -135,9 +135,11 @@ def check_model_batch(model_name='weld_resnet50_model', batch_size=9):
 
         img = Image.open(path[i])
         figure.add_subplot(rows, cols, i+1)
-        plt.title(f'{acc_class} {s:.2f}%\nActual: {pred_class}')
+        plt.title(f'{acc_class} {s:.2f}%\nActual: {pred_class}', fontsize=8)
         plt.axis("off")
-        plt.imshow(img)
+        plt.imshow(img, cmap='gray')
+
+    plt.savefig(os.path.join(CHART_DIR, f'batch_eval.png'), dpi=300, bbox_inches="tight")
     plt.show()
     
 
