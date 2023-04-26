@@ -1,11 +1,9 @@
-from pathlib import Path
 import os
 
 import torch.nn as nn
 import torch
 import torch.optim as optim
 from torch.optim import lr_scheduler
-from torchvision import transforms
 from torchmetrics.classification import BinaryAccuracy
 
 import numpy as np

@@ -11,6 +11,7 @@ def get_device(show=True):
         print('#'*80)
     return device
 
+
 def get_dataset(type='test', loader=False, batch_size=32):
     BATCH_SIZE = batch_size
 
@@ -33,6 +34,7 @@ def get_dataset(type='test', loader=False, batch_size=32):
                                                 num_workers=8)
     
     return dataset_loader, len(dataset)
+
 
 def get_train_transforms():
     """

@@ -99,7 +99,7 @@ def check_model_single(model_name='weld_resnet50_model'):
 
 def check_model_batch(model_name='weld_resnet50_model', batch_size=9):
     device = get_device(show=False)
-    
+
     dataset = get_dataset(type='test')
     dataset_loader, _ = get_dataset(type='test', loader=True, batch_size=batch_size)
 
@@ -207,6 +207,7 @@ def make_epoch_chart(data, title, ylabel, figure_name, show=False):
     if show:
         plt.show()
 
+
 def make_charts(csv_name='weld_training.csv', version='v5'):
     df = pd.read_csv(os.path.join(CSV_DIR, csv_name))
     loss = df[[' train_loss', ' valid_loss']]
@@ -216,11 +217,7 @@ def make_charts(csv_name='weld_training.csv', version='v5'):
     
 
 if __name__ == '__main__':
-
     #make_charts()
-
-    #make_linechart()
     #check_model_batch()
     check_accuracy_performance()
     #make_matrix()
-    # print('Done.

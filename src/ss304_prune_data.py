@@ -1,5 +1,4 @@
 from ss304_dataset import ss304Dataset
-import numpy as np
 import os, shutil, random, json
 import ss304_globals
 
