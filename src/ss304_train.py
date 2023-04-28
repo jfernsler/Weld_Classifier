@@ -15,7 +15,7 @@ from ss304_stats import make_charts
 from ss304_globals import *
 
 BASE_NAME = 'weld_resnet50_model'
-VERSION = 'v6'
+VERSION = 'v7' # up from v6
 CSV_NAME = f'{BASE_NAME}_{VERSION}.csv'
 EPOCH_CSV_PATH = os.path.join(CSV_DIR, CSV_NAME)
 
@@ -153,7 +153,7 @@ def run_train(epochs=1):
 
     # set up optimizer and learning rate scheduler
     optimizer_sat = optim.Adam(model_weld.fc.parameters(), lr=0.1)
-    lr_sch = lr_scheduler.StepLR(optimizer_sat, step_size=5, gamma=0.1)
+    lr_sch = lr_scheduler.StepLR(optimizer_sat, step_size=2, gamma=0.1)
 
     # begin training
     model_weld = train_model(model_weld,
@@ -180,5 +180,5 @@ def list_model(model):
 
 
 if __name__ == '__main__':
-    run_train(epochs=30)
+    run_train(epochs=10)
 

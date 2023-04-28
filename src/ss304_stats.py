@@ -27,7 +27,7 @@ def load_model(model_path):
     return model
 
 
-def check_accuracy_performance(model_name='weld_resnet50_model', size=50):
+def check_accuracy_performance(model_name=MODEL_NAME, size=50):
     device = get_device(show=True)
     print('Checking Accuracy and Speed for SS304 Weld Model')
     print('Getting dataset...')
@@ -71,7 +71,7 @@ def check_accuracy_performance(model_name='weld_resnet50_model', size=50):
     print('*'*20)
 
 
-def check_model_single(model_name='weld_resnet50_model'):
+def check_model_single(model_name=MODEL_NAME):
     device = get_device(show=False)
     dataset = get_dataset(type='test')
 
@@ -97,7 +97,7 @@ def check_model_single(model_name='weld_resnet50_model'):
     print(f"Actual: {class_actual} || Prediction: {class_pred}: {100 * score:.1f}%")
 
 
-def check_model_batch(model_name='weld_resnet50_model', batch_size=9):
+def check_model_batch(model_name=MODEL_NAME, batch_size=9):
     device = get_device(show=False)
 
     dataset = get_dataset(type='test')
@@ -139,20 +139,20 @@ def check_model_batch(model_name='weld_resnet50_model', batch_size=9):
         plt.axis("off")
         plt.imshow(img, cmap='gray')
 
-    plt.savefig(os.path.join(CHART_DIR, f'batch_eval.png'), dpi=300, bbox_inches="tight")
+    plt.savefig(os.path.join(CHART_DIR, f'{MODEL_NAME}_batch_eval.png'), dpi=300, bbox_inches="tight")
     plt.show()
     
 
-def make_matrix(model_name='weld_resnet50_model', version='v5'):
+def make_matrix(model_name=MODEL_NAME):
     BATCH_SIZE = 64
     device = get_device(show=True)
 
     # create the pytorch data loader
-    test_dataset = get_dataset(data_type='test')
-    test_dataset_loader, td_size = get_dataset(data_type='test', loader=True, batch_size=BATCH_SIZE)
+    test_dataset = get_dataset(type='test')
+    test_dataset_loader, td_size = get_dataset(type='test', loader=True, batch_size=BATCH_SIZE)
 
     model_path = os.path.join(MODEL_DIR, f'{model_name}.pt')
-    figure_path = os.path.join(CHART_DIR, f'{model_name}_confusion_{version}.png')
+    figure_path = os.path.join(CHART_DIR, f'{model_name}_confusion.png')
 
     model = ss304_weld_model()
     model.load_state_dict(torch.load(model_path, map_location=device))
@@ -189,7 +189,7 @@ def make_matrix(model_name='weld_resnet50_model', version='v5'):
     plt.title('Confusion Matrix for CNN based Weld Classification')
     hm = sn.heatmap(df_cm, annot=True, linewidths=.5, cmap='plasma', fmt='.2f', linecolor='grey')
     hm.set(xlabel='Predicted', ylabel='Truth')
-    plt.savefig(figure_path)
+    plt.savefig(figure_path, dpi=300, bbox_inches="tight")
 
     return
 
@@ -210,16 +210,17 @@ def make_epoch_chart(data, title, ylabel, figure_name, show=False):
         plt.show()
 
 
-def make_charts(csv_name='weld_training.csv', version='v5'):
+def make_charts(model_name=MODEL_NAME):
+    csv_name = f'{model_name}.csv'
     df = pd.read_csv(os.path.join(CSV_DIR, csv_name))
     loss = df[[' train_loss', ' valid_loss']]
     accuracy = df[[' train_accuracy', ' valid_accuracy']]
-    make_epoch_chart(loss, 'Loss per Epoch', 'Loss', f'Loss_{version}', show=True)
-    make_epoch_chart(accuracy, 'Accuracy per Epoch', 'Accuracy', f'Accuracy_{version}', show=False)
+    make_epoch_chart(loss, 'Loss per Epoch', 'Loss', f'Loss_{model_name}', show=True)
+    make_epoch_chart(accuracy, 'Accuracy per Epoch', 'Accuracy', f'Accuracy_{model_name}', show=False)
     
 
 if __name__ == '__main__':
     #make_charts()
     #check_model_batch()
-    check_accuracy_performance()
-    #make_matrix()
+    #check_accuracy_performance()
+    make_matrix()

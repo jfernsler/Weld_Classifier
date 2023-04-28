@@ -2,6 +2,7 @@ from pathlib import Path
 import os
 
 # Globals
+MODEL_NAME = 'weld_resnet50_model_v6'
 SCRIPT_PATH = Path(__file__).absolute()
 SCRIPT_DIR = os.path.dirname(SCRIPT_PATH)
 CSV_DIR = os.path.join(SCRIPT_DIR, '..', 'csv')
